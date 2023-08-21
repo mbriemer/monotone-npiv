@@ -1,5 +1,11 @@
 library(fda)
 
+source("my_basisfd.R")
+source("my_getbasismatrix.R")
+source("my_getbasispenalty.R")
+source("create.regression_splines.basis.R")
+# Do I need "functions analogous to fourier and fourierpen for evaluating basis functions for basis penalty matrices"?
+
 # Simulation constants and functions
 
 # Simulation parameters
@@ -70,11 +76,6 @@ estimate <- function(b, Y, X, W, p_k, q_k){
 
   P <- make_P(p_k, X)
   Q <- make_Q(q_k, W)
-
-  #print("P")
-  #print(P)
-  #print("b")
-  #print(b)
 
   minimand <- t(Y - P %*% b) %*% Q %*% solve(tcrossprod(Q)) %*% t(Q) %*% (Y - P %*% b)
   return(minimand)
