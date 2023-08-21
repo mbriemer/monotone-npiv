@@ -4,27 +4,27 @@ source("my_basisfd.R")
 source("my_getbasismatrix.R")
 source("my_getbasispenalty.R")
 source("create.regression_splines.basis.R")
-# Do I need "functions analogous to fourier and fourierpen for evaluating basis functions for basis penalty matrices"?
+# TODO Do I need "functions analogous to fourier and fourierpen for evaluating basis functions for basis penalty matrices"?
 
 # Simulation constants and functions
 
 # Simulation parameters
 
-set_sim_parameters <- function(K, J, sigma = 0.3, rho = 0.5, eta = 0.5) {
-  sim_parameters <- list(K = K,
-                         J = J,
+set_sim_parameters <- function(k, j, sigma = 0.3, rho = 0.5, eta = 0.5) {
+  sim_parameters <- list(k= k,
+                         j = j, #TODO enforce j >= k?
                          sigma = sigma,
                          rho = rho,
                          eta = eta)
   return(sim_parameters)
 }
 
-# Noise terms
+# noise terms
 
-make_noise_terms <- function(N, sigma, eta) {
-  zeta <- rnorm(N, 0, 1)
-  lunate_epsilon <- rnorm(N, 0, 1)
-  ny <- rnorm(N, 0, 1)
+make_noise_terms <- function(n, sigma, eta) {
+  zeta <- rnorm(n, 0, 1)
+  lunate_epsilon <- rnorm(n, 0, 1)
+  ny <- rnorm(n, 0, 1)
   epsilon <- sigma * (eta * lunate_epsilon + sqrt(1 - eta^2) * ny)
 
   noise_terms <- list(zeta = zeta,
@@ -36,48 +36,48 @@ make_noise_terms <- function(N, sigma, eta) {
 
 # Data generating functions
 
-sample_W <- function(zeta) {
-  W <- pnorm(zeta, 0, 1)
-  return(W)
+sample_w <- function(zeta) {
+  w <- pnorm(zeta, 0, 1)
+  return(w)
 }
 
-sample_X <- function(rho, zeta, lunate_epsilon) {
-  X <- pnorm(rho * zeta + sqrt(1 - rho^2) * lunate_epsilon, 0, 1)
-  return(X)
+sample_x <- function(rho, zeta, lunate_epsilon) {
+  x <- pnorm(rho * zeta + sqrt(1 - rho^2) * lunate_epsilon, 0, 1)
+  return(x)
 }
 
-g <- function(X, model_no) {
+g <- function(x, model_no) {
   if (model_no == 1){
-    return(X^2 + 0.2 * X)
+    return(x^2 + 0.2 * x)
   }
   if (model_no == 2){
-    return(2 * max(0, X - 1 / 2)^2 + 0.5 * X)
+    return(2 * max(0, x - 1 / 2)^2 + 0.5 * x)
   }
 }
 
-sample_Y <- function(X, epsilon, model_no) {
-  Y <- g(X, model_no) + epsilon
-  return(Y)
+sample_y <- function(x, epsilon, model_no) {
+  y <- g(x, model_no) + epsilon
+  return(y)
 }
 
 # estimation functions
 
-make_P <- function(basis, X){
-  P <- eval.basis(X, basis)
-  return(P)
+make_p <- function(basis, x){ # TODO simplify
+  p <- eval.basis(x, basis)
+  return(p)
 }
 
-make_Q <- function(basis, W) {
-  Q <- eval.basis(W, basis)
-  return(Q)
+make_q <- function(basis, w) {
+  q <- eval.basis(w, basis)
+  return(q)
 }
 
-estimate <- function(b, Y, X, W, p_k, q_k){
+estimate <- function(b, y, x, w, p_k, q_k){
 
-  P <- make_P(p_k, X)
-  Q <- make_Q(q_k, W)
+  p <- make_p(p_k, x) # TODO move?
+  q <- make_q(q_k, w)
 
-  minimand <- t(Y - P %*% b) %*% Q %*% solve(tcrossprod(Q)) %*% t(Q) %*% (Y - P %*% b)
+  minimand <- t(y - p %*% b) %*% q %*% solve(tcrossprod(q)) %*% t(q) %*% (y - p %*% b)
   return(minimand)
 }
 
@@ -85,32 +85,32 @@ estimate <- function(b, Y, X, W, p_k, q_k){
 
 sample_size <- 100
 
-sim_parameters <- set_sim_parameters(K = 4, J = 4)
-noise_terms <- make_noise_terms(N = sample_size,
+sim_parameters <- set_sim_parameters(k = 4, j = 4)
+noise_terms <- make_noise_terms(n = sample_size,
                                 sigma = sim_parameters$sigma,
                                 eta = sim_parameters$eta)
 
-W <- sample_W(zeta = noise_terms$zeta)
-X <- sample_X(rho = sim_parameters$rho,
+w <- sample_w(zeta = noise_terms$zeta)
+x <- sample_x(rho = sim_parameters$rho,
               zeta = noise_terms$zeta,
               lunate_epsilon = noise_terms$lunate_epsilon)
-Y <- sample_Y(X = X, epsilon = noise_terms$epsilon, model_no = 1)
+y <- sample_y(x = x, epsilon = noise_terms$epsilon, model_no = 1)
 
-basis <- create.bspline.basis(nbasis = sim_parameters$K)
+basis <- create.bspline.basis(nbasis = sim_parameters$k)
 plot(basis)
 
-p_k <- create.exponential.basis(nbasis = sim_parameters$K)
-q_k <- create.exponential.basis(nbasis = sim_parameters$J)
+p_k <- create.exponential.basis(nbasis = sim_parameters$k)
+q_k <- create.exponential.basis(nbasis = sim_parameters$j)
 
-P <- make_P(p_k, X)
-Q <- make_Q(q_k, W)
+p <- make_p(p_k, x)
+q <- make_q(q_k, w)
 
 minimize <- optim(
-  par = rep(0.5, sim_parameters$K),
+  par = rep(0.5, sim_parameters$k),
   fn = estimate,
-  Y = Y,
-  X = X,
-  W = W,
+  y = y,
+  x = x,
+  w = w,
   p_k = p_k,
   q_k = q_k,
 )
