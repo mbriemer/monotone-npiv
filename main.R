@@ -1,11 +1,3 @@
-library(fda)
-
-source("my_basisfd.R")
-source("my_getbasismatrix.R")
-source("my_getbasispenalty.R")
-source("create.regression_splines.basis.R")
-# TODO Do I need "functions analogous to fourier and fourierpen for evaluating basis functions for basis penalty matrices"?
-
 # Simulation constants and functions
 
 # Simulation parameters
@@ -62,20 +54,25 @@ sample_y <- function(x, epsilon, model_no) {
 
 # estimation functions
 
-make_p <- function(basis, x){ # TODO simplify
-  p <- eval.basis(x, basis)
-  return(p)
+evaluate_basis <- function(x, basis_dimension) {
+  if (basis_dimension == 1){
+    return(1)
+  }
+  if (basis_dimension == 2){
+    return(cbind(1, x))
+  }
+  if (basis_dimension == 3){
+    return(cbind(1, x, x^2))
+  }
+  if (basis_dimension == 4){
+    return(cbind(1, x, x^2, max(0, x - 1 / 2)^2))
+  }
+  if (basis_dimension == 5){
+    return(cbind(1, x, x^2, max(0, x - 1 / 3)^2, max(0, x - 2 / 3)^2))
+  }
 }
 
-make_q <- function(basis, w) {
-  q <- eval.basis(w, basis)
-  return(q)
-}
-
-estimate <- function(b, y, x, w, p_k, q_k){
-
-  p <- make_p(p_k, x) # TODO move?
-  q <- make_q(q_k, w)
+estimate <- function(b, y, x, w, p, q){
 
   minimand <- t(y - p %*% b) %*% q %*% solve(tcrossprod(q)) %*% t(q) %*% (y - p %*% b)
   return(minimand)
@@ -83,9 +80,9 @@ estimate <- function(b, y, x, w, p_k, q_k){
 
 # Main
 
-sample_size <- 100
+sample_size <- 10
 
-sim_parameters <- set_sim_parameters(k = 4, j = 4)
+sim_parameters <- set_sim_parameters(k = 3, j = 3)
 noise_terms <- make_noise_terms(n = sample_size,
                                 sigma = sim_parameters$sigma,
                                 eta = sim_parameters$eta)
@@ -96,21 +93,15 @@ x <- sample_x(rho = sim_parameters$rho,
               lunate_epsilon = noise_terms$lunate_epsilon)
 y <- sample_y(x = x, epsilon = noise_terms$epsilon, model_no = 1)
 
-basis <- create.bspline.basis(nbasis = sim_parameters$k)
-plot(basis)
-
-p_k <- create.exponential.basis(nbasis = sim_parameters$k)
-q_k <- create.exponential.basis(nbasis = sim_parameters$j)
-
-p <- make_p(p_k, x)
-q <- make_q(q_k, w)
+p <- evaluate_basis(x, sim_parameters$k)
+q <- evaluate_basis(w, sim_parameters$j)
 
 minimize <- optim(
-  par = rep(0.5, sim_parameters$k),
+  par = rep(1, sim_parameters$k),
   fn = estimate,
   y = y,
   x = x,
   w = w,
-  p_k = p_k,
-  q_k = q_k,
+  p = p,
+  q = q,
 )
