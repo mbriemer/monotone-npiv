@@ -11,7 +11,7 @@ set_sim_parameters <- function(k, j, sigma = 0.3, rho = 0.5, eta = 0.5) {
   return(sim_parameters)
 }
 
-# noise terms
+# Noise terms
 
 make_noise_terms <- function(n, sigma, eta) {
   zeta <- rnorm(n, 0, 1)
@@ -52,7 +52,7 @@ sample_y <- function(x, epsilon, model_no) {
   return(y)
 }
 
-# estimation functions
+# Estimation functions
 
 evaluate_basis <- function(x, basis_dimension) {
   if (basis_dimension == 1){
@@ -73,14 +73,13 @@ evaluate_basis <- function(x, basis_dimension) {
 }
 
 estimate <- function(b, y, x, w, p, q){
-
-  minimand <- t(y - p %*% b) %*% q %*% solve(tcrossprod(q)) %*% t(q) %*% (y - p %*% b)
+  minimand <- t(y - p %*% b) %*% q %*% solve(crossprod(q)) %*% t(q) %*% (y - p %*% b)
   return(minimand)
 }
 
 # Main
 
-sample_size <- 10
+sample_size <- 100
 
 sim_parameters <- set_sim_parameters(k = 3, j = 3)
 noise_terms <- make_noise_terms(n = sample_size,
@@ -96,12 +95,11 @@ y <- sample_y(x = x, epsilon = noise_terms$epsilon, model_no = 1)
 p <- evaluate_basis(x, sim_parameters$k)
 q <- evaluate_basis(w, sim_parameters$j)
 
-minimize <- optim(
-  par = rep(1, sim_parameters$k),
-  fn = estimate,
-  y = y,
-  x = x,
-  w = w,
-  p = p,
-  q = q,
+minimize <- optim(par = rep(1, sim_parameters$k),
+                  fn = estimate,
+                  y = y,
+                  x = x,
+                  w = w,
+                  p = p,
+                  q = q,
 )
