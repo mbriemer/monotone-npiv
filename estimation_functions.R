@@ -25,7 +25,9 @@ calculate_minimand <- function(b, y, p, q) {
 
 estimate <- function(y, p, q, shape = "increasing") {
   if (shape == "unconstrained") {
-    beta <- solve(t(p) %*% q %*% solve(crossprod(q)) %*% t(q) %*% p) %*% t(p) %*% q %*% solve(crossprod(q)) %*% t(q) %*% y
+    mq <- q %*% solve(t(q) %*% q) %*% t(q)
+
+    beta <- solve(t(p) %*% mq %*% p) %*% t(p) %*% mq %*% y
     return(beta)
   }
 

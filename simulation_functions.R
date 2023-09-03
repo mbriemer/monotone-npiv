@@ -40,17 +40,23 @@ sample_x <- function(rho, zeta, lunate_epsilon) {
   return(x)
 }
 
-g <- function(x, model_no) {
-  if (model_no == 1) {
+g <- function(x, model) {
+  if (model == 1) {
     return(x^2 + 0.2 * x)
   }
-  if (model_no == 2) {
+  if (model == 2) {
     return(2 * pmax(0, x - 1 / 2)^2 + 0.5 * x)
+  }
+  if (model == 3) {
+    return(exp(x))
+  }
+  if (model == 4){
+    return(1 / (1 + exp(- 10 * (x - 1 / 3))) + 1 / (1 + exp(- 10 * (x - 2 / 3))))
   }
 }
 
-sample_y <- function(x, epsilon, model_no) {
-  y <- g(x, model_no) + epsilon
+sample_y <- function(x, epsilon, model) {
+  y <- g(x, model) + epsilon
   return(y)
 }
 
@@ -68,7 +74,7 @@ sim <- function(sim_parameters){
   x <- sample_x(rho = sim_parameters$rho,
                 zeta = noise_terms$zeta,
                 lunate_epsilon = noise_terms$lunate_epsilon)
-  y <- sample_y(x = x, epsilon = noise_terms$epsilon, model_no = 2)
+  y <- sample_y(x = x, epsilon = noise_terms$epsilon, model = 2)
 
   p <- evaluate_basis(x, sim_parameters$k)
   q <- evaluate_basis(w, sim_parameters$j)
@@ -82,8 +88,13 @@ sim <- function(sim_parameters){
                      p = p,
                      q = q)
 
-  ise_u <- integrate(function(x) (g(x, model_no = 2) - evaluate_basis(x, sim_parameters$k) %*% beta_u)^2, 0, 1)$value
-  ise_c <- integrate(function(x) (g(x, model_no = 2) - evaluate_basis(x, sim_parameters$k) %*% beta_c)^2, 0, 1)$value
+  ise_u <- integrate(function(x) (g(x, model = 2) - evaluate_basis(x, sim_parameters$k) %*% beta_u)^2, 0, 1)$value
+  ise_c <- integrate(function(x) (g(x, model = 2) - evaluate_basis(x, sim_parameters$k) %*% beta_c)^2, 0, 1)$value
   
   return(c(ise_u, ise_c))
+}
+
+sim_median <- function(sample_size, model, k, j, sigma, rho, eta) {
+  results <- replicate(50, sim(sample_size, model, k, j, sigma, rho, eta))
+  median(results)
 }
