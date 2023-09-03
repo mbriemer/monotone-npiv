@@ -43,6 +43,8 @@ for (i in 1:nrow(params)) {
 colnames(results_paper) <- c("unconstrained", "increasing")
 results_paper <- results_paper * 1000
 
+write.csv(results_paper, file = "results_paper.csv", row.names = FALSE)
+
 # Replicating the simulation from the web supplement---------------------------
 
 iter <- 500
@@ -83,6 +85,8 @@ for (i in 1:nrow(params)) {
 }
 colnames(results_supplement) <- c("unconstrained", "increasing")
 results_supplement <- results_supplement * 1000
+
+write.csv(results_supplement, file = "results_supplement.csv", row.names = FALSE)
 
 # Weak instrument, high/low degree of endogeneity------------------------------
 
@@ -125,6 +129,8 @@ for (i in 1:nrow(params)) {
 colnames(results_iv) <- c("unconstrained", "increasing")
 results_iv <- results_iv * 1000
 
+write.csv(results_iv, file = "results_iv.csv", row.names = FALSE)
+
 # Harder to estimate functional forms------------------------------------------
 
 iter <- 500
@@ -164,6 +170,8 @@ for (i in 1:nrow(params)) {
 }
 colnames(results_hard) <- c("unconstrained", "increasing")
 results_hard <- results_hard * 1000
+
+write.csv(results_hard, file = "results_hard.csv", row.names = FALSE)
 
 # Different bases?-------------------------------------------------------------
 
