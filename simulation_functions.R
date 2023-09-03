@@ -76,9 +76,6 @@ sim <- function(sim_parameters) {
 
   cat("Running simulation with parameters:", as.character(sim_parameters), "\n")
 
-  n <- sim_parameters$sample_size
-  k <- sim_parameters$k
-
   cl <- makeCluster(detectCores() - 1)
   clusterEvalQ(cl, source("simulation_functions.R"))
   clusterEvalQ(cl, source("estimation_functions.R"))
@@ -95,8 +92,8 @@ sim <- function(sim_parameters) {
                                     lunate_epsilon = noise_terms$lunate_epsilon)
                       y <- sample_y(x = x, epsilon = noise_terms$epsilon, model = 2)
 
-                      p <- evaluate_basis(x, 3)
-                      q <- evaluate_basis(w, 3)
+                      p <- evaluate_basis(x, sim_parameters$k)
+                      q <- evaluate_basis(w, sim_parameters$j)
 
                       beta_u <- estimate(y = y,
                                          p = p,
