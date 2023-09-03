@@ -6,6 +6,8 @@ source("estimation_functions.R")
 
 # Main
 
+# Replicating the simulation from the paper------------------------------------
+
 iter <- 500
 sample_sizes <- c(50,
                   100,
@@ -25,23 +27,9 @@ params <- expand.grid(iter = iter,
                       model = model,
                       k = k,
                       j = j)
-
 params <- params[params$k == params$j, ]
 
-results <- data.frame(row.names = c("unconstrained", "increasing"))
-
-#results <- foreach(i = 1:nrow(params)) %do% {
-#  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
-#                                       sample_size = params$sample_size[i],
-#                                       model = params$model[i],
-#                                       k = params$k[i],
-#                                       j = params$j[i])
-#  mises <- sim(sim_parameters = sim_parameters)
-#  params$MISE[i] <- mean(mises)
-#}
-
-# Main simulation function
-
+results_paper <- data.frame(matrix(data = numeric(), ncol = 2))
 
 for (i in 1:nrow(params)) {
   sim_parameters <- set_sim_parameters(iterations = params$iter[i],
@@ -49,18 +37,137 @@ for (i in 1:nrow(params)) {
                                        model = params$model[i],
                                        k = params$k[i],
                                        j = params$j[i])
-  results <- rbind(results, sim(sim_parameters = sim_parameters))
+  results_paper <- rbind(results_paper, sim(sim_parameters))
 }
 
-results <- results * 1000
+colnames(results_paper) <- c("unconstrained", "increasing")
+results_paper <- results_paper * 1000
 
-sim_parameters <- set_sim_parameters(iterations = 500,
-                                     sample_size = 100,
-                                     model = 2,
-                                     k = 4,
-                                     j = 4)
+# Replicating the simulation from the web supplement---------------------------
 
-mises <- sim(sim_parameters = sim_parameters)
+iter <- 500
+sample_sizes <- c(50,
+                  100,
+                  500,
+                  1000,
+                  5000,
+                  10000,
+                  50000)#,
+                  #100000,
+                  #500000)
+model <- c(1, 2)
+k <- c(2, 3, 4, 5)
+j <- c(2, 3, 4, 5)
+rho <- c(0.3, 0.5)
+eta <- c(0.3, 0.7)
+
+params <- expand.grid(iter = iter,
+                      sample_size = sample_sizes,
+                      model = model,
+                      k = k,
+                      j = j,
+                      rho = rho,
+                      eta = eta)
+params <- params[params$k == params$j, ]
+params <- params[params$rho != params$eta, ]
+
+results_supplement <- data.frame(matrix(data = numeric(), ncol = 2))
+
+for (i in 1:nrow(params)) {
+  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+                                       sample_size = params$sample_size[i],
+                                       model = params$model[i],
+                                       k = params$k[i],
+                                       j = params$j[i])
+  results_supplement <- rbind(results_supplement, sim(sim_parameters))
+}
+colnames(results_supplement) <- c("unconstrained", "increasing")
+results_supplement <- results_supplement * 1000
+
+# Weak instrument, high/low degree of endogeneity------------------------------
+
+iter <- 500
+sample_sizes <- c(50,
+                  100,
+                  500,
+                  1000,
+                  5000,
+                  10000,
+                  50000)#,
+                  #100000,
+                  #500000)
+model <- c(1, 2)
+k <- c(2, 3, 4, 5)
+j <- c(2, 3, 4, 5)
+rho <- c(0.3, 0.1)
+eta <- c(0.3, 0.9)
+
+params <- expand.grid(iter = iter,
+                      sample_size = sample_sizes,
+                      model = model,
+                      k = k,
+                      j = j,
+                      rho = rho,
+                      eta = eta)
+params <- params[params$k <= params$j, ]
+params <- params[params$rho != params$eta, ]
+
+results_iv <- data.frame(matrix(data = numeric(), ncol = 2))
+
+for (i in 1:nrow(params)) {
+  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+                                       sample_size = params$sample_size[i],
+                                       model = params$model[i],
+                                       k = params$k[i],
+                                       j = params$j[i])
+  results_iv <- rbind(results_iv, sim(sim_parameters))
+}
+colnames(results_iv) <- c("unconstrained", "increasing")
+results_iv <- results_iv * 1000
+
+# Harder to estimate functional forms------------------------------------------
+
+iter <- 500
+sample_sizes <- c(50,
+                  100,
+                  500,
+                  1000,
+                  5000,
+                  10000,
+                  50000)#,
+                  #100000,
+                  #500000)
+model <- c(3, 4, 5, 6, 7)
+k <- c(2, 3, 4, 5)
+j <- c(2, 3, 4, 5)
+rho <- c(0.3)
+eta <- c(0.3)
+
+params <- expand.grid(iter = iter,
+                      sample_size = sample_sizes,
+                      model = model,
+                      k = k,
+                      j = j,
+                      rho = rho,
+                      eta = eta)
+params <- params[params$k == params$j, ]
+params <- params[params$rho != params$eta, ]
+
+results_supplement <- data.frame(matrix(data = numeric(), ncol = 2))
+
+for (i in 1:nrow(params)) {
+  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+                                       sample_size = params$sample_size[i],
+                                       model = params$model[i],
+                                       k = params$k[i],
+                                       j = params$j[i])
+  results_supplement <- rbind(results_supplement, sim(sim_parameters))
+}
+colnames(results_supplement) <- c("unconstrained", "increasing")
+results_supplement <- results_supplement * 1000
+
+# Different bases?-------------------------------------------------------------
+
 
 #p_basis <- create.exponential.basis(rangeval = range(x),
 #                                    nbasis = sim_parameters$k)
