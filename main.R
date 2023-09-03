@@ -1,27 +1,66 @@
 #library(fda)
+library(parallel)
 
 source("simulation_functions.R")
 source("estimation_functions.R")
 
 # Main
 
-ises_u <- c()
-ises_c <- c()
+iter <- 500
+sample_sizes <- c(50,
+                  100,
+                  500,
+                  1000,
+                  5000,
+                  10000,
+                  50000)#,
+                  #100000,
+                  #500000)
+model <- c(1, 2)
+k <- c(2, 3, 4, 5)
+j <- c(2, 3, 4, 5)
 
-#sim_setting <- matrix(data = )
+params <- expand.grid(iter = iter,
+                      sample_size = sample_sizes,
+                      model = model,
+                      k = k,
+                      j = j)
 
-sim_parameters <- set_sim_parameters(sample_size = 100,
+params <- params[params$k == params$j, ]
+
+results <- data.frame(row.names = c("unconstrained", "increasing"))
+
+#results <- foreach(i = 1:nrow(params)) %do% {
+#  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+#                                       sample_size = params$sample_size[i],
+#                                       model = params$model[i],
+#                                       k = params$k[i],
+#                                       j = params$j[i])
+#  mises <- sim(sim_parameters = sim_parameters)
+#  params$MISE[i] <- mean(mises)
+#}
+
+# Main simulation function
+
+
+for (i in 1:nrow(params)) {
+  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+                                       sample_size = params$sample_size[i],
+                                       model = params$model[i],
+                                       k = params$k[i],
+                                       j = params$j[i])
+  results <- rbind(results, sim(sim_parameters = sim_parameters))
+}
+
+results <- results * 1000
+
+sim_parameters <- set_sim_parameters(iterations = 500,
+                                     sample_size = 100,
                                      model = 2,
                                      k = 4,
                                      j = 4)
 
-ises <- sim(sim_parameters = sim_parameters)
-
-ises_u <- c(ises_u, ises[1])
-ises_c <- c(ises_c, ises[2])
-
-mise_u <- median(ises_u)
-mise_c <- median(ises_c)
+mises <- sim(sim_parameters = sim_parameters)
 
 #p_basis <- create.exponential.basis(rangeval = range(x),
 #                                    nbasis = sim_parameters$k)
