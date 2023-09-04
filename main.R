@@ -123,7 +123,9 @@ for (i in 1:nrow(params)) {
                                        sample_size = params$sample_size[i],
                                        model = params$model[i],
                                        k = params$k[i],
-                                       j = params$j[i])
+                                       j = params$j[i],
+                                       rho = params$rho[i],
+                                       eta = params$eta[i])
   results_iv <- rbind(results_iv, sim(sim_parameters))
 }
 colnames(results_iv) <- c("unconstrained", "increasing")
@@ -144,19 +146,61 @@ sample_sizes <- c(50,
                   #100000,
                   #500000)
 model <- c(3, 4, 5, 6, 7)
-k <- c(2, 3, 4, 5)
-j <- c(2, 3, 4, 5)
-rho <- c(0.3)
-eta <- c(0.3)
+k <- c(2)#, 3, 4, 5)
+j <- c(3)#, 4, 5)
+#rho <- c(0.3)
+#eta <- c(0.3)
 
 params <- expand.grid(iter = iter,
                       sample_size = sample_sizes,
                       model = model,
                       k = k,
-                      j = j,
-                      rho = rho,
-                      eta = eta)
+                      j = j)#,
+                      #rho = rho,
+                      #eta = eta)
 params <- params[params$k <= params$j, ]
+
+results_hard <- data.frame(matrix(data = numeric(), ncol = 2))
+
+for (i in 1:nrow(params)) {
+  sim_parameters <- set_sim_parameters(iterations = params$iter[i],
+                                       sample_size = params$sample_size[i],
+                                       model = params$model[i],
+                                       k = params$k[i],
+                                       j = params$j[i])
+  results_hard <- rbind(results_hard, sim(sim_parameters))
+}
+colnames(results_hard) <- c("unconstrained", "increasing")
+results_hard <- results_hard * 1000
+
+write.csv(results_hard, file = "results_hard.csv", row.names = FALSE)
+
+# Partially flat functions-----------------------------------------------------
+
+iter <- 500
+sample_sizes <- c(50,
+                  100,
+                  500,
+                  1000,
+                  5000,
+                  10000)#,
+                  #50000)#,
+                  #100000,
+                  #500000)
+model <- 10:18
+k <- c(2, 3, 4, 5)
+j <- c(2, 3, 4, 5)
+#rho <- c(0.3)
+#eta <- c(0.3)
+
+params <- expand.grid(iter = iter,
+                      sample_size = sample_sizes,
+                      model = model,
+                      k = k,
+                      j = j)#,
+                      #rho = rho,
+                      #eta = eta)
+params <- params[params$k == params$j, ]
 
 results_hard <- data.frame(matrix(data = numeric(), ncol = 2))
 
@@ -175,6 +219,21 @@ write.csv(results_hard, file = "results_hard.csv", row.names = FALSE)
 
 # Different bases?-------------------------------------------------------------
 
+
+
+# Plot tables------------------------------------------------------------------
+
+library(stargazer)
+
+stargazer(results_paper,
+          type = "latex",
+          title = "Replication of the simulation from the paper",
+          label = "tab:paper",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          column.labels = c("Unconstrained", "Increasing"),
+          out = "paper.tex")
 
 #p_basis <- create.exponential.basis(rangeval = range(x),
 #                                    nbasis = sim_parameters$k)
