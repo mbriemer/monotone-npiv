@@ -243,7 +243,7 @@ library(stargazer)
 df_wide <- test2 %>%
   select(sample_size, model, k, unconstrained) %>%
   pivot_wider(names_from = k,
-              values_from = unconstrained) %>%
+              values_from = results) %>%
   select(-"5") %>%
   round(2) %>%
   group_by(model) %>%
@@ -405,6 +405,95 @@ stargazer(df_wide[[9]],
           digits = 2,
           header = FALSE,
           out = "model18_i.tex")
+
+# Ratio------------------------------------------------------------------------
+
+ratios <- test2 %>%
+  select(sample_size, model, k, unconstrained, increasing) %>%
+  pivot_longer(cols = c(unconstrained, increasing)) %>%
+  spread(key = name, value = value) %>%
+  mutate(result = increasing / unconstrained) %>%
+  drop_na() %>%
+  select(sample_size, model, k, result) %>%
+  pivot_wider(names_from = k,
+              values_from = result) %>%
+  round(2) %>%
+  group_by(model) %>%
+  group_split()
+
+stargazer(ratios[[1]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_10.tex")
+
+stargazer(ratios[[2]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_11.tex")
+
+stargazer(ratios[[3]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_12.tex")
+
+stargazer(ratios[[4]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_13.tex")
+
+stargazer(ratios[[5]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_14.tex")
+
+stargazer(ratios[[6]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_15.tex")
+
+stargazer(ratios[[7]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_16.tex")
+
+stargazer(ratios[[8]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_17.tex")
+
+stargazer(ratios[[9]],
+          type = "latex",
+          title = "Ratios",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "ratios_18.tex")
+
+
 
 
 
