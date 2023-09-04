@@ -215,7 +215,219 @@ for (i in 1:nrow(params)) {
 colnames(results_flat) <- c("unconstrained", "increasing")
 results_flat <- results_flat * 1000
 
-write.csv(results_hard, file = "results_hard.csv", row.names = FALSE)
+write.csv(results_flat, file = "results_flat.csv", row.names = FALSE)
+
+params_flat <- params
+
+test <- data.frame(params_flat, row.names = 1:nrow(params_flat))
+
+results_flat_10 <- results_flat[which(params_flat$model == 10, ), ]
+
+library(tidyverse)
+
+params_flat_test <- params_flat
+params_flat_test$join_key <- row_number(params_flat)
+values_test <- results_flat
+values_test$join_key <- row_number(values_test)
+
+results_flat <- read.csv("simulation_results/results_flat.csv")
+
+test2 <- params_flat_test
+test2$unconstrained <- results_flat$unconstrained
+test2$increasing <- results_flat$increasing
+
+# Rearranging data and stargazing----------------------------------------------
+library(stargazer)
+# unconstrained----------------------------------------------------------------
+
+df_wide <- test2 %>%
+  select(sample_size, model, k, unconstrained) %>%
+  pivot_wider(names_from = k,
+              values_from = unconstrained) %>%
+  select(-"5") %>%
+  round(2) %>%
+  group_by(model) %>%
+  group_split()
+
+stargazer(df_wide[[1]],
+          type = "latex",
+          title = "Simulation results",
+          #label = "tab:paper",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          #column.labels = c("Unconstrained", "Increasing"),
+          out = "model10_u.tex")
+
+stargazer(df_wide[[2]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model11_u.tex")
+
+stargazer(df_wide[[3]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model12_u.tex")
+
+stargazer(df_wide[[4]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model13_u.tex")
+
+stargazer(df_wide[[5]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model14_u.tex")
+
+stargazer(df_wide[[6]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model15_u.tex")
+
+stargazer(df_wide[[7]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model16_u.tex")
+
+stargazer(df_wide[[8]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model17_u.tex")
+
+stargazer(df_wide[[9]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model18_u.tex")
+
+# increasing-------------------------------------------------------------------
+
+df_wide <- test2 %>%
+  select(sample_size, model, k, increasing) %>%
+  pivot_wider(names_from = k,
+              values_from = increasing) %>%
+  select(-"5") %>%
+  round(2) %>%
+  group_by(model) %>%
+  group_split()
+
+stargazer(df_wide[[1]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model10_i.tex")
+
+stargazer(df_wide[[2]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model11_i.tex")
+
+stargazer(df_wide[[3]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model12_i.tex")
+
+stargazer(df_wide[[4]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model13_i.tex")
+
+stargazer(df_wide[[5]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model14_i.tex")
+
+stargazer(df_wide[[6]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model15_i.tex")
+
+stargazer(df_wide[[7]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model16_i.tex")
+
+stargazer(df_wide[[8]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model17_i.tex")
+
+stargazer(df_wide[[9]],
+          type = "latex",
+          title = "Simulation results",
+          summary = FALSE,
+          digits = 2,
+          header = FALSE,
+          out = "model18_i.tex")
+
+
+
+
+for(g in 1:length(df_wide)) {
+
+  filepath <- cat("test_", df_wide[[g]]$model, ".tex", sep = "")
+  stargazer(df_wide[[g]],
+            type = "latex",
+            title = "Simulation results",
+            #label = "tab:paper",
+            summary = FALSE,
+            digits = 2,
+            header = FALSE,
+            #column.labels = c("Unconstrained", "Increasing"),
+            out = )
+}
+
+df_wide_i <- test2 %>%
+  select(sample_size, model, k, increasing) %>%
+  pivot_wider(names_from = k,
+              values_from = increasing)
+
 
 # Different bases?-------------------------------------------------------------
 
