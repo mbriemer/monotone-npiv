@@ -202,7 +202,7 @@ params <- expand.grid(iter = iter,
                       #eta = eta)
 params <- params[params$k == params$j, ]
 
-results_hard <- data.frame(matrix(data = numeric(), ncol = 2))
+results_flat <- data.frame(matrix(data = numeric(), ncol = 2))
 
 for (i in 1:nrow(params)) {
   sim_parameters <- set_sim_parameters(iterations = params$iter[i],
@@ -210,10 +210,10 @@ for (i in 1:nrow(params)) {
                                        model = params$model[i],
                                        k = params$k[i],
                                        j = params$j[i])
-  results_hard <- rbind(results_hard, sim(sim_parameters))
+  results_flat <- rbind(results_flat, sim(sim_parameters))
 }
-colnames(results_hard) <- c("unconstrained", "increasing")
-results_hard <- results_hard * 1000
+colnames(results_flat) <- c("unconstrained", "increasing")
+results_flat <- results_flat * 1000
 
 write.csv(results_hard, file = "results_hard.csv", row.names = FALSE)
 
