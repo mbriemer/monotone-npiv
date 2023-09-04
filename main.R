@@ -1,3 +1,7 @@
+### DO NOT RUN
+# This version was written hurriedly to be used for submitting the project on time.
+# It is not intended to run flawlessly without further modifications.
+
 #library(fda)
 library(parallel)
 
