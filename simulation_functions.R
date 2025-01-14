@@ -58,13 +58,15 @@ sample_x <- function(rho, zeta, lunate_epsilon) {
 }
 
 g_partially_flat <- function(x, a, b, slope_a, slope_b) {
-  if (x < a) {
-    return(-(x - a)^2 * slope_a)
-  }
-  if (x > b) {
-    return((x - b)^2 * slope_b)
-  }
-  return(0)
+  ifelse(
+    x < a,
+    -(x - a)^2 * slope_a,
+    ifelse(
+      x > b,
+      (x - b)^2 * slope_b,
+      0
+    )
+  )
 }
 
 g <- function(x, model) {
