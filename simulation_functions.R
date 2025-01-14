@@ -1,20 +1,34 @@
 # Simulation constants and functions
 
-# Simulation parameters
+library(parallel)
+source("estimation_functions.R")
 
-set_sim_parameters <- function(iterations, sample_size, model, k, j, sigma = 0.5, rho = 0.3, eta = 0.3) {
-  sim_parameters <- list(iterations = iterations,
-                         sample_size = sample_size,
-                         model = model,
-                         k = k,
-                         j = j, #TODO enforce j >= k?
-                         sigma = sigma,
-                         rho = rho,
-                         eta = eta)
+# Simulation parameters---------------------------------------------------------
+
+set_sim_parameters <- function(
+  iterations,
+  sample_size,
+  model,
+  k,
+  j,
+  sigma = 0.5,
+  rho = 0.3,
+  eta = 0.3
+) {
+  sim_parameters <- list(
+    iterations = iterations,
+    sample_size = sample_size,
+    model = model,
+    k = k,
+    j = j, #TODO enforce j >= k?
+    sigma = sigma,
+    rho = rho,
+    eta = eta
+  )
   return(sim_parameters)
 }
 
-# Noise terms
+# Noise terms-------------------------------------------------------------------
 
 make_noise_terms <- function(n, sigma, eta) {
   zeta <- rnorm(n, 0, 1)
@@ -22,14 +36,16 @@ make_noise_terms <- function(n, sigma, eta) {
   ny <- rnorm(n, 0, 1)
   epsilon <- sigma * (eta * lunate_epsilon + sqrt(1 - eta^2) * ny)
 
-  noise_terms <- list(zeta = zeta,
-                      lunate_epsilon = lunate_epsilon,
-                      ny = ny,
-                      epsilon = epsilon)
+  noise_terms <- list(
+    zeta = zeta,
+    lunate_epsilon = lunate_epsilon,
+    ny = ny,
+    epsilon = epsilon
+  )
   return(noise_terms)
 }
 
-# Data generating functions
+# Data generating functions-----------------------------------------------------
 
 sample_w <- function(zeta) {
   w <- pnorm(zeta, 0, 1)
@@ -58,22 +74,6 @@ g <- function(x, model) {
   if (model == 2) {
     return(2 * pmax(0, x - 1 / 2)^2 + 0.5 * x)
   }
-  if (model == 3) {
-    return(exp(x))
-  }
-  if (model == 4) {
-    return(1 / (1 + exp(- 10 * (x - 1 / 3))) + 1 / (1 + exp(- 10 * (x - 2 / 3))))
-  }
-  if (model == 5) {
-    return(pmax(0, x - 1 / 2)^3)
-  }
-  if (model == 6) {
-    return(0.5 * sin(10 * x))
-  }
-  if (model == 7) {
-    return(-x^2 + 1)
-  }
-
   if (model == 10) {
     return(g_partially_flat(x, 0.1, 0.9, 0.1, 0.1))
   }
@@ -108,58 +108,88 @@ sample_y <- function(x, epsilon, model) {
   return(y)
 }
 
-# Main simulation function
+# Main simulation functions-----------------------------------------------------
 
 sim <- function(sim_parameters) {
 
-  cat("Running simulation with parameters:", as.character(sim_parameters), "\n")
+  cat(
+    "Running simulation in parallel with parameters:",
+    as.character(sim_parameters),
+    "\n"
+  )
 
   cl <- makeCluster(detectCores() - 1)
   clusterEvalQ(cl, source("simulation_functions.R"))
   clusterEvalQ(cl, source("estimation_functions.R"))
 
-  ises <- parLapply(cl = cl,
-                    X = 1:sim_parameters$iterations,
-                    fun = function(x) {
-                      tryCatch({
-                        noise_terms <- make_noise_terms(n = sim_parameters$sample_size,
-                                                      sigma = sim_parameters$sigma,
-                                                      eta = sim_parameters$eta)
-                        w <- sample_w(zeta = noise_terms$zeta)
-                        x <- sample_x(rho = sim_parameters$rho,
-                                      zeta = noise_terms$zeta,
-                                      lunate_epsilon = noise_terms$lunate_epsilon)
-                        y <- sample_y(x = x, epsilon = noise_terms$epsilon, model = 2)
+  ises <- tryCatch({
+    parLapply(cl = cl,
+              X = 1:sim_parameters$iterations,
+              fun = function(x) {
+                noise_terms <- make_noise_terms(
+                  n = sim_parameters$sample_size,
+                  sigma = sim_parameters$sigma,
+                  eta = sim_parameters$eta
+                )
+                w <- sample_w(zeta = noise_terms$zeta)
+                x <- sample_x(
+                  rho = sim_parameters$rho,
+                  zeta = noise_terms$zeta,
+                  lunate_epsilon = noise_terms$lunate_epsilon
+                )
+                y <- sample_y(
+                  x = x,
+                  epsilon = noise_terms$epsilon,
+                  model = sim_parameters$model
+                )
 
-                        p <- evaluate_basis(x, sim_parameters$k)
-                        q <- evaluate_basis(w, sim_parameters$j)
+                p <- evaluate_basis(x, sim_parameters$k)
+                q <- evaluate_basis(w, sim_parameters$j)
 
-                        beta_u <- estimate(y = y,
-                                            p = p,
-                                            q = q,
-                                            shape = "unconstrained")
+                beta_u <- estimate(
+                  y = y,
+                  p = p,
+                  q = q,
+                  shape = "unconstrained"
+                )
 
-                        beta_c <- estimate(y = y,
-                                            p = p,
-                                            q = q)
+                beta_c <- estimate(
+                  y = y,
+                  p = p,
+                  q = q
+                )
 
-                        ise_u <- integrate(function(x) (g(x, model = 2) - evaluate_basis(x, sim_parameters$k) %*% beta_u)^2, 0, 1)$value #sic!
-                        ise_c <- integrate(function(x) (g(x, model = 2) - evaluate_basis(x, sim_parameters$j) %*% beta_c)^2, 0, 1)$value #sic!
-
-                        return(c(ise_u, ise_c))
-                      },
-                      error = function(e) {
-                        cat("Error:", conditionMessage(e), "\n")
-                        return(c(NA, NA))
-                      })
-                    })
+                ise_u <- integrate(
+                  \(x) {
+                    (g(x, model = sim_parameters$model) -
+                        evaluate_basis(x, sim_parameters$k)
+                        %*% beta_u
+                    )^2
+                  }, #sic!
+                  0,
+                  1
+                )$value
+                ise_c <- integrate(
+                  \(x) {
+                    (g(x, model = sim_parameters$model) -
+                        evaluate_basis(x, sim_parameters$j)
+                        %*% beta_c
+                    )^2
+                  }, #sic!
+                  0,
+                  1
+                )$value
+                return(c(ise_u, ise_c))
+              })
+  }, error = function(e) {
+    cat("Error:", conditionMessage(e), "\n")
+    return(c(NA, NA))
+  })
 
   stopCluster(cl)
   results <- do.call(rbind, ises)
   results <- results[!is.na(results[, 1]), ]
-
   mise_u <- median(results[, 1])
   mise_c <- median(results[, 2])
-
   return(c(mise_u, mise_c))
 }
